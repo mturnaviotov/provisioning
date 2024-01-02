@@ -1,0 +1,252 @@
+#cloud-config
+autoinstall:
+  version: 1
+  debug:
+    verbose: true
+  reporting:
+    hook:
+      type: webhook
+      endpoint: http://example.com/endpoint/path
+  early-commands:
+    - echo hello
+    - dd if=/dev/zero of=/dev/sda bs=512 count=68
+  locale: en_US
+  keyboard:
+    layout: us
+    #  variant: dvorak
+  network:
+    version: 2
+    ethernets:
+      enp0s3:
+        dhcp4: yes
+  storage:
+    config:
+      - ptable: gpt
+        path: /dev/sda
+        wipe: superblock-recursive
+        preserve: false
+        name: ""
+        grub_device: true
+        id: disk-sda
+        type: disk
+      - device: disk-sda
+        size: 1048576
+        flag: bios_grub
+        number: 1
+        preserve: false
+        grub_device: false
+        offset: 1048576
+        path: /dev/sda1
+        id: partition-0
+        type: partition
+      - device: disk-sda
+        size: 15G
+        wipe: superblock
+        number: 3
+        preserve: false
+        grub_device: false
+        path: /dev/sda3
+        id: partition-2
+        type: partition
+      - name: vg
+        size: 15G
+        devices:
+          - partition-2
+        preserve: false
+        id: lvm
+        type: lvm_volgroup
+      - name: boot
+        volgroup: lvm
+        size: 512M
+        wipe: superblock
+        preserve: false
+        path: /dev/vg/boot
+        id: lvm_partition-1
+        type: lvm_partition
+      - fstype: xfs
+        volume: lvm_partition-1
+        preserve: false
+        id: format-1
+        type: format
+      - path: /boot
+        device: format-1
+        id: mount-1
+        type: mount
+      - name: swap
+        volgroup: lvm
+        size: 1G
+        wipe: superblock
+        preserve: false
+        path: /dev/vg/swap
+        id: lvm_partition-2
+        type: lvm_partition
+      - fstype: swap
+        volume: lvm_partition-2
+        preserve: false
+        id: format-2
+        type: format
+      - path: ""
+        device: format-2
+        id: mount-2
+        type: mount
+      - name: root
+        volgroup: lvm
+        size: 2G
+        wipe: superblock
+        preserve: false
+        path: /dev/vg/root
+        id: lvm_partition-3
+        type: lvm_partition
+      - fstype: xfs
+        volume: lvm_partition-3
+        preserve: false
+        id: format-3
+        type: format
+      - path: /
+        device: format-3
+        id: mount-3
+        type: mount
+      - name: usr
+        volgroup: lvm
+        size: 6G
+        wipe: superblock
+        preserve: false
+        path: /dev/vg/usr
+        id: lvm_partition-4
+        type: lvm_partition
+      - fstype: xfs
+        volume: lvm_partition-4
+        preserve: false
+        id: format-4
+        type: format
+      - path: /usr
+        device: format-4
+        id: mount-4
+        type: mount
+      - name: var
+        volgroup: lvm
+        size: 2G
+        wipe: superblock
+        preserve: false
+        path: /dev/vg/var
+        id: lvm_partition-5
+        type: lvm_partition
+      - fstype: xfs
+        volume: lvm_partition-5
+        preserve: false
+        id: format-5
+        type: format
+      - path: /var
+        device: format-5
+        id: mount-5
+        type: mount
+      - name: var-lib
+        volgroup: lvm
+        size: 1G
+        wipe: superblock
+        preserve: false
+        path: /dev/vg/var-lib
+        id: lvm_partition-6
+        type: lvm_partition
+      - fstype: xfs
+        volume: lvm_partition-6
+        preserve: false
+        id: format-6
+        type: format
+      - path: /var/lib
+        device: format-6
+        id: mount-6
+        type: mount
+      - name: var-log
+        volgroup: lvm
+        size: 1G
+        wipe: superblock
+        preserve: false
+        path: /dev/vg/var-log
+        id: lvm_partition-7
+        type: lvm_partition
+      - fstype: xfs
+        volume: lvm_partition-7
+        preserve: false
+        id: format-7
+        type: format
+      - path: /var/log
+        device: format-7
+        id: mount-7
+        type: mount
+      - name: home
+        volgroup: lvm
+        size: 1G
+        wipe: superblock
+        preserve: false
+        path: /dev/vg/home
+        id: lvm_partition-8
+        type: lvm_partition
+      - fstype: xfs
+        volume: lvm_partition-8
+        preserve: false
+        id: format-8
+        type: format
+      - path: /home
+        device: format-8
+        id: mount-8
+        type: mount
+    swap:
+      size: 0
+  # Identity should be used in one user environment, for desktop or predefined non-root user.
+  # for server installation - set this section and comment users: [''] in user data section and remove ubunbtu desktop from post install steps
+  #identity:
+  #  hostname: 'server name'
+  ## echo password | mkpasswd -m sha-512 -s 
+  #  password: 
+  #  realname: real name
+  #  username: login name
+  # linked to apt section which is don't worked here, keep it commented
+  #source:
+  #  id: ubuntu-server-minimal
+  #  search_drivers: true
+  ssh:
+  #  allow-pw: false
+    authorized-keys: []
+    install-server: true
+    emit_keys_to_console: true
+  # proxy: http://squid.internal:3128/
+  final_message: "The system is finally up, after $UPTIME seconds"
+  # disable users: [''] to avoid ubuntu destktop configuration
+  user-data:
+    users: ['']
+    disable_root: false
+  # disable ubuntu desktop here
+  late-commands:
+    - curtin in-target --target=/target -- parted /dev/sda resizepart 3 100%
+    - curtin in-target --target=/target -- pvresize /dev/sda3
+    - curtin in-target --target=/target -- lvextend /dev/vg/home -r -l +50%FREE
+    - curtin in-target --target=/target -- apt update
+    - curtin in-target --target=/target -- apt upgrade -y
+    - curtin in-target --target=/target -- apt dist-upgrade -y
+    # remove ubuntu-desktop if you want install minimal console
+    - curtin in-target --target=/target -- apt install -y mc ubuntu-desktop wget curl vim lsof
+  #error-commands:
+  #   - tar c /var/log/installer | nc 192.168.0.1 1000 
+  bootcmd:
+    - sudo echo "12345" >> /srv/test
+  ##[wget,"http://some.server/cloud-init/post-install.sh", -O, /root/post-install.sh]
+  runcmd:
+    - sudo echo "RUNCMD" > /srv/test2
+  
+  ########################
+  # memo:
+  # live server 2204 ok with this file
+  # 
+  # https://medium.com/jacklee26/set-up-pxe-server-on-ubuntu20-04-and-window-10-e69733c1de87
+  # https://github.com/office-itou/Linux/blob/master/installer/source/cfg/ubuntu.server/user-data
+  # https://github.com/chenchih/tutorial-Note/blob/master/PXE-Setting-2022/Files/ubuntufiles/default
+  # 
+  # Disk layout
+  # first sda3 partition use 15gb, after resized to 100% (we don't know physical disk size)
+  # /        - 2 Gb
+  # /boot    - 512 Mb
+  # /home    - auto resize to 50% lvm to be able resize /var/lib, /var, /usr or ther partitions
+  # /var     - 2 Gb
+  # /var/lib - 2Gb - docker, databases, all stuff here
+  # /var/log - 1Gb

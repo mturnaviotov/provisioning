@@ -1,0 +1,4 @@
+*nat
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -o {{ master_iface['name'] }} -j MASQUERADE
+COMMIT

@@ -1,0 +1,14 @@
+#cat << EOF > /etc/netplan/00-installer-config.yaml
+network:
+  version: 2
+  renderer: networkd
+  #renderer: NetworkManager
+  ethernets:
+    enp0s3:
+      dhcp4: yes
+    {{ target_iface['name'] }}:
+      dhcp4: no
+      addresses:
+        - "{{ target_iface['ip'] }}/{{ target_iface['prefix'] }}"
+#      gateway4: 192.168.2.254
+# EOF
