@@ -5,9 +5,9 @@
 This repository contains a basic ansible playbook to install a simple PXE server plus CloudInit declaration to provide
 a Ubuntu Desktop for end user with minimal packages based on ubuntu server minimal
 
-to tune this script for a server side usage you should enable identity block to provide hostname, user name and passwrd and disable ubuntu-desktop in late operations block and remove ```users: ['']``` from user-data section
+To tune this script for a server side usage you should enable identity block to provide hostname, user name and passwrd and disable ubuntu-desktop in late operations block and remove ```users: ['']``` from user-data section
 
-## Server
+### Server
 
 Server use a small amount of servers:
 
@@ -16,19 +16,25 @@ Server use a small amount of servers:
 - Iptables at nat mode
 - Second network interface should be used no server isolated TFTP-bootes hosts
 
-## Server requirements
+#### Server requirements
 
 - 1 cpu
 - 1 GB ram
 - 5 Gb for a system
 - Additional space for linux, windows and other boot images
 
-## Server setting
+#### Server setting
 
 - Settings located on pxe.yml - You should provide master interface (external) name and target interface settings which will be configured for serve requests from PXE clients.
 - Network settings are covered in templates/netplan.yaml
 
-## Disk layout 
+### Client
+
+* In user-data You can choose server, or unattended desktop setup.
+* With predefined system users and ssh-keys or allow to user choose login name, password by GUI UI setup wizard
+
+
+#### Cliend Disk layout 
 
 First sda3 LVM VG partition use 15gb, after installation resized to entire disk usage (we don't know physical disk size)
 

@@ -1,0 +1,359 @@
+#cloud-config
+autoinstall:
+  version: 1
+  # =============================================================================
+  refresh-installer:
+    update: yes
+  # =============================================================================
+  debug:
+    verbose: true
+    output: print
+  # =============================================================================
+  # reporting:
+  #   hook:
+  #     type: webhook
+  #     endpoint: http://example.com/endpoint/path
+  # =============================================================================
+  early-commands:
+    - dd if=/dev/zero of=/dev/sda bs=1024 count=68
+  # =============================================================================
+  storage:
+    config:
+      - {
+          ptable: gpt,
+          path: /dev/sda,
+          wipe: superblock-recursive,
+          preserve: false,
+          name: "",
+          grub_device: true,
+          id: disk-sda,
+          type: disk,
+        }
+      - {
+          device: disk-sda,
+          size: 1048576,
+          flag: bios_grub,
+          number: 1,
+          preserve: false,
+          grub_device: false,
+          offset: 1048576,
+          path: /dev/sda1,
+          id: partition-0,
+          type: partition,
+        }
+      - {
+          device: disk-sda,
+          size: 15G,
+          wipe: superblock,
+          number: 3,
+          preserve: false,
+          grub_device: false,
+          path: /dev/sda3,
+          id: partition-2,
+          type: partition,
+        }
+      - {
+          name: vg,
+          size: 15G,
+          devices: [partition-2],
+          preserve: false,
+          id: lvm,
+          type: lvm_volgroup,
+        }
+      - {
+          name: boot,
+          volgroup: lvm,
+          size: 512M,
+          wipe: superblock,
+          preserve: false,
+          path: /dev/vg/boot,
+          id: lvm_partition-1,
+          type: lvm_partition,
+        }
+      - {
+          fstype: xfs,
+          volume: lvm_partition-1,
+          preserve: false,
+          id: format-1,
+          type: format,
+        }
+      - { path: /boot, device: format-1, id: mount-1, type: mount }
+      - {
+          name: swap,
+          volgroup: lvm,
+          size: 1G,
+          wipe: superblock,
+          preserve: false,
+          path: /dev/vg/swap,
+          id: lvm_partition-2,
+          type: lvm_partition,
+        }
+      - {
+          fstype: swap,
+          volume: lvm_partition-2,
+          preserve: false,
+          id: format-2,
+          type: format,
+        }
+      - { path: "", device: format-2, id: mount-2, type: mount }
+      - {
+          name: root,
+          volgroup: lvm,
+          size: 2G,
+          wipe: superblock,
+          preserve: false,
+          path: /dev/vg/root,
+          id: lvm_partition-3,
+          type: lvm_partition,
+        }
+      - {
+          fstype: xfs,
+          volume: lvm_partition-3,
+          preserve: false,
+          id: format-3,
+          type: format,
+        }
+      - { path: /, device: format-3, id: mount-3, type: mount }
+      - {
+          name: usr,
+          volgroup: lvm,
+          size: 6G,
+          wipe: superblock,
+          preserve: false,
+          path: /dev/vg/usr,
+          id: lvm_partition-4,
+          type: lvm_partition,
+        }
+      - {
+          fstype: xfs,
+          volume: lvm_partition-4,
+          preserve: false,
+          id: format-4,
+          type: format,
+        }
+      - { path: /usr, device: format-4, id: mount-4, type: mount }
+      - {
+          name: var,
+          volgroup: lvm,
+          size: 2G,
+          wipe: superblock,
+          preserve: false,
+          path: /dev/vg/var,
+          id: lvm_partition-5,
+          type: lvm_partition,
+        }
+      - {
+          fstype: xfs,
+          volume: lvm_partition-5,
+          preserve: false,
+          id: format-5,
+          type: format,
+        }
+      - { path: /var, device: format-5, id: mount-5, type: mount }
+      - {
+          name: var-lib,
+          volgroup: lvm,
+          size: 1G,
+          wipe: superblock,
+          preserve: false,
+          path: /dev/vg/var-lib,
+          id: lvm_partition-6,
+          type: lvm_partition,
+        }
+      - {
+          fstype: xfs,
+          volume: lvm_partition-6,
+          preserve: false,
+          id: format-6,
+          type: format,
+        }
+      - { path: /var/lib, device: format-6, id: mount-6, type: mount }
+      - {
+          name: var-log,
+          volgroup: lvm,
+          size: 1G,
+          wipe: superblock,
+          preserve: false,
+          path: /dev/vg/var-log,
+          id: lvm_partition-7,
+          type: lvm_partition,
+        }
+      - {
+          fstype: xfs,
+          volume: lvm_partition-7,
+          preserve: false,
+          id: format-7,
+          type: format,
+        }
+      - { path: /var/log, device: format-7, id: mount-7, type: mount }
+      - {
+          name: home,
+          volgroup: lvm,
+          size: 1G,
+          wipe: superblock,
+          preserve: false,
+          path: /dev/vg/home,
+          id: lvm_partition-8,
+          type: lvm_partition,
+        }
+      - {
+          fstype: xfs,
+          volume: lvm_partition-8,
+          preserve: false,
+          id: format-8,
+          type: format,
+        }
+      - { path: /home, device: format-8, id: mount-8, type: mount }
+    swap:
+      size: 0
+  # =============================================================================
+  locale: en_US.UTF-8
+  keyboard:
+    layout: us
+  # =============================================================================
+  network:
+    version: 2
+    ethernets:
+      any:
+        match:
+          name: "en*"
+        dhcp4: true
+        # addresses:
+        #   - 192.168.1.1/24
+        # gateway4: 192.168.1.254
+        # nameservers:
+        #   search:
+        #     - workgroup
+        #   addresses:
+        #     - ::1
+        #     - 127.0.0.1
+        #     - 192.168.1.254
+        # dhcp6: true
+        # ipv6-privacy: true
+  # =============================================================================
+  # Disable identity to allow user choose realname. username and password at a first boot
+  identity:
+    hostname: hostname
+    password: `insert here: echo password | mkpasswd -m sha-512 -s `
+    realname: your real name
+    username: your sign name
+  # =============================================================================
+  ssh:
+    allow-pw: true
+    authorized-keys: []
+    #  - # ssh-import-id gh:your_github_name"
+    install-server: true
+  # =============================================================================
+  # oem:
+  #   install: auto
+  # =============================================================================
+  # source:
+  #   id: ubuntu-server
+  #   search_drivers: true
+  #   id: ubuntu-desktop
+  #   search_drivers: true
+  # -----------------------------------------------------------------------------
+  # codecs:
+  #   install: true
+  # drivers:
+  #   install: true
+  # =============================================================================
+  apt:
+    disable_components: []
+    fallback: abort
+    geoip: true
+    mirror-selection:
+      primary:
+        - country-mirror
+        - arches:
+            - amd64
+            - i386
+          uri: http://archive.ubuntu.com/ubuntu
+        - arches:
+            - s390x
+            - arm64
+            - armhf
+            - powerpc
+            - ppc64el
+            - riscv64
+          uri: http://ports.ubuntu.com/ubuntu-ports
+    conf: | # APT config
+      APT {
+        Get {
+          Assume-Yes "true";
+          Fix-Broken "true";
+          Acquire-Retries "20";
+          Acquire-Http-Timeout "100";
+        };
+      };
+      # Acquire::Retries "120";
+      # DPkg::Lock::Timeout "120";
+    # sources:
+    #   my-ppa.list:
+    #     source: "deb http://ppa.launchpad.net/curtin-dev/test-archive/ubuntu $RELEASE main"
+    #     keyid: B59D 5F15 97A5 04B7 E230  6DCA 0620 BBCF 0368 3F77
+    preserve_sources_list: false
+  # =============================================================================
+  package_update: true
+  package_upgrade: true
+  updates: all
+  packages:
+    - mc
+    # - standard^
+  # =============================================================================
+  # snaps:
+  #   - name: firefox
+  #   - name: gnome-3-38-2004
+  #   - name: gtk-common-themes
+  #   - name: snap-store
+  #   - name: snapd-desktop-integration
+  # =============================================================================
+  # allow all disk usage for PV/LVM
+  late-commands:
+    - curtin in-target --target=/target -- parted /dev/sda resizepart 3 100%
+    - curtin in-target --target=/target -- pvresize /dev/sda3
+    - curtin in-target --target=/target -- lvextend /dev/vg/home -r -l +50%FREE
+    # - 'echo "ubuntu ALL=(ALL) NOPASSWD:ALL" > /target/etc/sudoers.d/ubuntu-nopw'
+    # - 'chmod 440 /target/etc/sudoers.d/ubuntu-nopw'
+    # Write a custom script that can take care of some post install setup "late-commands" cannot be interactive unfortunately"
+    # - |
+    #   cat <<EOF | sudo tee /target/etc/finish-install-setup.sh
+    #   #!/usr/bin/env bash
+    #   echo *************************
+    #   echo ****  Finish Setup   ****
+    #   echo *************************
+    #   EOF
+  # =============================================================================
+  user-data:
+    #   users: [""] ### set it with disabling identity to run end user desktop setting on a first boot. GUI should be enabled
+    #   ntp:
+    #     servers:
+    #       - ntp.nict.jp
+    timezone: Europe/Krakow
+  #   runcmd:
+  #     # Install the NVIDIA driver from the ppa we setup earlier
+  #     - [apt-get, install, --yes, nvidia-driver-470, --no-install-recommends]
+  #     - |
+  #       #!/usr/bin/env bash
+  #       echo ''
+  #       echo '***************************************'
+  #       echo ' To complete install setup please run, '
+  #       echo ' sudo /etc/finish-install-setup.sh'
+  #       echo '***************************************'
+  #       echo ''
+  # =============================================================================
+  # by default
+  # power_state:
+  #   mode: reboot
+  # =============================================================================
+  bootcmd:
+    - echo 'BOOOTCMD' /home/turnaviotov/bootcmd
+# =============================================================================
+# memo:
+#   https://ubuntu.com/server/docs/install/autoinstall-reference
+#   https://github.com/canonical/cloud-init/
+#   https://cloudinit.readthedocs.io/
+#   https://curtin.readthedocs.io/
+# =============================================================================
+# Created at 2024/01/02 22:00:00
+# === EOF =====================================================================

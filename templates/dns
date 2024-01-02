@@ -3,5 +3,5 @@ port=53
 bind-interfaces
 #domain-needed
 #bogus-priv
-listen-address=127.0.0.1,{{ target_iface.ip }}
+listen-address={{ target_iface.ip }}
 expand-hosts

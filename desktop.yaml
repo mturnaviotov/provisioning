@@ -13,6 +13,7 @@
         combined: "192.168.3.1/24",
       }
     master_iface: { name: "enp0s3" }
+    destination_folder: "desktop"
     distro_url: "https://releases.ubuntu.com/22.04/"
     distro_name: "ubuntu-22.04.3-live-server-amd64.iso"
     distro_dest: "/var/www/html/{{ distro_name }}"
@@ -54,7 +55,7 @@
     - name: Set up server interface
       become: yes
       ansible.builtin.template:
-        src: templates/netplan
+        src: templates/netplan.yaml
         dest: /etc/netplan/00-installer-config.yaml
         mode: 0400
     - name: Create directory for TFTP
@@ -64,7 +65,7 @@
         state: directory
         mode: 0777
       with_items:
-        - server
+        - "{{ destination_folder }}"
         - pxelinux.cfg
     - name: Create a symbolic link for BIOS p1
       ansible.builtin.file:
@@ -81,12 +82,12 @@
         #  - libcom32.c32
         #  - libutil.c32
         #  - vesamenu.c32
-    - name: Download Ubuntu
-      become: yes
-      get_url:
-        url: "{{ distro_url }}{{ distro_name }}"
-        dest: "{{ distro_dest }}"
-        mode: 0644
+    # - name: Download Ubuntu
+    #   become: yes
+    #   get_url:
+    #     url: "{{ distro_url }}{{ distro_name }}"
+    #     dest: "{{ distro_dest }}"
+    #     mode: 0644
     - name: Mount DVD to copy kernel
       become: yes
       ansible.posix.mount:
@@ -98,7 +99,7 @@
     - name: Copy kernel to TFTP
       ansible.builtin.copy:
         src: /mnt/casper/{{ item }}
-        dest: /srv/tftp/server/{{ item }}
+        dest: /srv/tftp/{{ destination_folder }}/{{ item }}
         remote_src: true
       with_items:
         - initrd
@@ -122,17 +123,17 @@
     - name: Create user-data directory
       become: yes
       ansible.builtin.file:
-        path: /var/www/html/desktop/
+        path: /var/www/html/{{ destination_folder }}/
         state: directory
         mode: 0777
     - name: Cloud Init user data
       ansible.builtin.template:
-        src: templates/server-to-desktop.yaml
-        dest: /var/www/html/desktop/user-data
+        src: templates/{{ destination_folder }}.yaml
+        dest: /var/www/html/{{ destination_folder }}/user-data
         mode: 0644
     - name: Cloud Init other templates
       ansible.builtin.file:
-        dest: /var/www/html/desktop/{{ item }}
+        dest: /var/www/html/{{ destination_folder }}/{{ item }}
         state: touch
         mode: 0644
       with_items:
@@ -183,5 +184,5 @@
       with_items:
         - nfs-kernel-server
         - systemd-resolved
-        #- dnsmasq
+        - dnsmasq
         #  exportfs -a ??

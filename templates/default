@@ -1,7 +1,0 @@
-DEFAULT Install Ubuntu
-TIMEOUT 30
-LABEL Install U^buntu
-  KERNEL server/vmlinuz
-  INITRD server/initrd
-  IPAPPEND 1
-  APPEND root=/dev/ram0 ramdisk_size=1500000 ip=dhcp only-ubiquity cloud-config-url=/dev/null boot=casper url=http://{{ target_iface.ip }}/ubuntu-22.04.3-live-server-amd64.iso ds=nocloud-net;s=http://{{ target_iface.ip }}/desktop autoinstall ---

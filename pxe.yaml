@@ -4,6 +4,7 @@
 - name: Install PXE server minimal
   hosts: srv
   vars:
+    master_iface: { name: "enp0s3" } # NAT, external
     target_iface:
       {
         name: "enp0s8",
@@ -12,7 +13,7 @@
         prefix: 24,
         combined: "192.168.3.1/24",
       }
-    master_iface: { name: "enp0s3" }
+    destination_folder: "server"
     distro_url: "https://releases.ubuntu.com/22.04/"
     distro_name: "ubuntu-22.04.3-live-server-amd64.iso"
     distro_dest: "/var/www/html/{{ distro_name }}"
@@ -64,7 +65,7 @@
         state: directory
         mode: 0777
       with_items:
-        - server
+        - "{{ destination_folder }}"
         - pxelinux.cfg
     - name: Create a symbolic link for BIOS p1
       ansible.builtin.file:
@@ -98,7 +99,7 @@
     - name: Copy kernel to TFTP
       ansible.builtin.copy:
         src: /mnt/casper/{{ item }}
-        dest: /srv/tftp/server/{{ item }}
+        dest: /srv/tftp/{{ destination_folder }}/{{ item }}
         remote_src: true
       with_items:
         - initrd
@@ -116,23 +117,23 @@
         create: yes
     - name: Bootloader default menu config
       ansible.builtin.template:
-        src: templates/default
+        src: templates/boot-menu
         dest: /srv/tftp/pxelinux.cfg/
         mode: 0644
     - name: Create user-data directory
       become: yes
       ansible.builtin.file:
-        path: /var/www/html/desktop/
+        path: /var/www/html/{{ destination_folder }}/
         state: directory
         mode: 0777
     - name: Cloud Init user data
       ansible.builtin.template:
-        src: templates/server-to-desktop.yaml
-        dest: /var/www/html/desktop/user-data
+        src: templates/{{ destination_folder }}.yaml
+        dest: /var/www/html/{{ destination_folder }}/user-data
         mode: 0644
     - name: Cloud Init other templates
       ansible.builtin.file:
-        dest: /var/www/html/desktop/{{ item }}
+        dest: /var/www/html/{{ destination_folder }}/{{ item }}
         state: touch
         mode: 0644
       with_items:
@@ -162,7 +163,8 @@
       ansible.builtin.shell:
         cmd: "/sbin/iptables-restore < /etc/iptables/rules.v4"
     # Set ip forwarding on in /proc and in the sysctl file and reload if necessary
-    - become: yes
+    - name: Swt sysctl IPv4 forwarding
+      become: yes
       ansible.posix.sysctl:
         name: net.ipv4.ip_forward
         value: 1
