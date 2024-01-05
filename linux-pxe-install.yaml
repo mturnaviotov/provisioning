@@ -1,9 +1,10 @@
-# ansible-playbook software-release.yaml -K -i inventory
+# ansible-playbook linux-pxe-install.yaml -K -i inventory
 #
 ---
 - name: Install PXE server minimal
   hosts: srv
   vars:
+    master_iface: { name: "enp0s3" } # NAT, external
     target_iface:
       {
         name: "enp0s8",
@@ -12,8 +13,7 @@
         prefix: 24,
         combined: "192.168.3.1/24",
       }
-    master_iface: { name: "enp0s3" }
-    destination_folder: "desktop"
+    destination_folder: "cloud-init"
     distro_url: "https://releases.ubuntu.com/22.04/"
     distro_name: "ubuntu-22.04.3-live-server-amd64.iso"
     distro_dest: "/var/www/html/{{ distro_name }}"
@@ -82,12 +82,12 @@
         #  - libcom32.c32
         #  - libutil.c32
         #  - vesamenu.c32
-    # - name: Download Ubuntu
-    #   become: yes
-    #   get_url:
-    #     url: "{{ distro_url }}{{ distro_name }}"
-    #     dest: "{{ distro_dest }}"
-    #     mode: 0644
+    - name: Download Ubuntu
+      become: yes
+      get_url:
+        url: "{{ distro_url }}{{ distro_name }}"
+        dest: "{{ distro_dest }}"
+        mode: 0644
     - name: Mount DVD to copy kernel
       become: yes
       ansible.posix.mount:
@@ -96,7 +96,7 @@
         fstype: iso9660
         opts: ro,loop
         state: mounted
-    - name: Copy kernel to TFTP
+    - name: Copy kernel from mounted iso to TFTP
       ansible.builtin.copy:
         src: /mnt/casper/{{ item }}
         dest: /srv/tftp/{{ destination_folder }}/{{ item }}
@@ -115,9 +115,9 @@
         path: /etc/exports
         line: "/srv/tftp/  {{ target_iface['ip'] }}(ro,sync,no_wdelay,insecure_locks,no_root_squash,insecure,no_subtree_check)"
         create: yes
-    - name: Bootloader default menu config
+    - name: Bootloader default menu config create
       ansible.builtin.template:
-        src: templates/default
+        src: templates/boot-menu
         dest: /srv/tftp/pxelinux.cfg/
         mode: 0644
     - name: Create user-data directory
@@ -131,7 +131,7 @@
         src: templates/{{ destination_folder }}.yaml
         dest: /var/www/html/{{ destination_folder }}/user-data
         mode: 0644
-    - name: Cloud Init other templates
+    - name: Cloud Init requires other files to provide functionality
       ansible.builtin.file:
         dest: /var/www/html/{{ destination_folder }}/{{ item }}
         state: touch
@@ -144,12 +144,12 @@
       ansible.builtin.template:
         src: templates/rules.v4
         dest: /etc/iptables/
-    - name: DNS masq config propagation dns
+    - name: DNSMasq DNS config propagation
       become: yes
       ansible.builtin.template:
         src: templates/dns
         dest: /etc/dnsmasq.d/
-    - name: DNS masq config propagation
+    - name: DNSMasq main config propagation
       become: yes
       ansible.builtin.template:
         src: templates/dnsmasq.conf
@@ -163,14 +163,15 @@
       ansible.builtin.shell:
         cmd: "/sbin/iptables-restore < /etc/iptables/rules.v4"
     # Set ip forwarding on in /proc and in the sysctl file and reload if necessary
-    - become: yes
+    - name: Set sysctl IPv4 forwarding
+      become: yes
       ansible.posix.sysctl:
         name: net.ipv4.ip_forward
         value: 1
         sysctl_set: true
         state: present
         reload: true
-    - name: resolved.conf update
+    - name: systemd-resolved resolved.conf update
       become: yes
       ansible.builtin.template:
         src: templates/resolved.conf
