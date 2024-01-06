@@ -234,12 +234,12 @@ autoinstall:
   # Disable identity to allow user choose realname. username and password at a first boot
   identity:
     hostname: hostname
-    password: `insert here: echo password | mkpasswd -m sha-512 -s `
+    password: `insert here: echo password | mkpasswd -m sha-512 -s`
     realname: your real name
     username: your sign name
   # =============================================================================
   ssh:
-    allow-pw: true
+    allow-pw: false
     authorized-keys: []
     #  - # ssh-import-id gh:your_github_name :)"
     install-server: true
@@ -258,7 +258,7 @@ autoinstall:
   # drivers:
   #   install: true
   # =============================================================================
-  # This apt block means that you recieve a 'default' apt sources config.
+  # This apt block means that you receive a 'default' apt sources config.
   apt:
     disable_components: []
     fallback: abort
@@ -294,15 +294,16 @@ autoinstall:
     #     source: "deb http://ppa.launchpad.net/curtin-dev/test-archive/ubuntu $RELEASE main"
     #     keyid: B59D 5F15 97A5 04B7 E230  6DCA 0620 BBCF 0368 3F77
     preserve_sources_list: false
-  apt_sources:
-    - "ppa:saltstack/salt"
+  # apt_sources:
+  #   - "ppa:saltstack/salt"
   # =============================================================================
   package_update: true
   package_upgrade: true
   updates: all
   packages:
     - mc
-    - salt-minion
+    - vim
+    # - salt-minion
     # - standard^
   # =============================================================================
   # snaps:
@@ -318,8 +319,10 @@ autoinstall:
     - curtin in-target --target=/target -- parted /dev/sda resizepart 3 100%
     - curtin in-target --target=/target -- pvresize /dev/sda3
     - curtin in-target --target=/target -- lvextend /dev/vg/home -r -l +50%FREE
-    - | 
-      sed -i "s/#master: salt/master: [192.168.3.1]/" /target/etc/salt/minion
+    # To use regexp, and other special symbols like redirect you should use '|' 
+    # like this salt minion config edit example
+    # - | 
+    #   sed -i "s/#master: salt/master: [192.168.3.1]/" /target/etc/salt/minion
     # - 'echo "ubuntu ALL=(ALL) NOPASSWD:ALL" > /target/etc/sudoers.d/ubuntu-nopw'
     # - 'chmod 440 /target/etc/sudoers.d/ubuntu-nopw'
     # Write a custom script that can take care of some post install setup "late-commands" cannot be interactive unfortunately"
@@ -332,13 +335,15 @@ autoinstall:
     #   EOF
   # =============================================================================
   user-data:
-    #   users: [""] ### set it with disabling identity to run end user desktop setting on a first boot. GUI should be enabled
+  #set it with disabling identity to run end-user desktop setting on at the first boot.
+  # GUI should be enabled
+    #   users: [""] 
     #   ntp:
     #     servers:
     #       - ntp.nict.jp
     timezone: Europe/City
   #   runcmd:
-  # #     # Some explates post install scripts usage
+  # #     # Some examples of post-install scripts usage
   # #     - [apt-get, install, --yes, nvidia-driver-470, --no-install-recommends]
   #     - |
   #       #!/usr/bin/env bash
@@ -349,7 +354,7 @@ autoinstall:
   #       echo '***************************************'
   #       echo ''
   # =============================================================================
-  # by default reboot. You also can user shutdown to prevent install - restart
+  # Reboot is by default option. You also can use shutdown to prevent install - restart
   # permanent loop
   # power_state:
   #   mode: reboot
