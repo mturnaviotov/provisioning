@@ -1,6 +1,6 @@
 DEFAULT Install Ubuntu
 TIMEOUT 30
-LABEL Install U^buntu
+LABEL Install Ubuntu
 KERNEL {{ destination_folder }}/vmlinuz
 INITRD {{ destination_folder }}/initrd
 IPAPPEND 1
