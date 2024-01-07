@@ -118,7 +118,7 @@
     - name: Bootloader default menu config create
       ansible.builtin.template:
         src: templates/boot-menu
-        dest: /srv/tftp/pxelinux.cfg/
+        dest: /srv/tftp/pxelinux.cfg/default
         mode: 0644
     - name: Create user-data directory
       become: yes
