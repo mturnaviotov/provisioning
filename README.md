@@ -39,6 +39,11 @@ Server uses a small number of services:
 - Check templates/cloud-init.yaml and update for your needs
 - (!) Sometime you can receive apt timeout related crash from cloudinit in kernel or software stages - try to retry, this is issue in cloudinit modules hardcodes
 
+#### Fail debug:
+
+- On PXE boot or cloud init error check server and client logs: ```sudo journalctl -x -u dnsmasq``` and ```sudo cat /var/log/apache2/access.log```
+- On client: ```journalctl -x | grep subiq | less``` or check Cloud Init documentation 
+
 #### Desktop setup:
 
 - Enable desktop-related packages like ubuntu-desktop.
