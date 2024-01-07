@@ -36,7 +36,8 @@ Server uses a small number of services:
 
 - Connect it to isolated network hub or switch which is connecter to second Server network adapter (marked as target) which will be serve PXE related requests.
 - Set up boot from LAN in BIOS settings for hardware or virtual machine unit.
-- Check templates/cloud-init.yaml and update for your needs.
+- Check templates/cloud-init.yaml and update for your needs
+- (!) Sometime you can receive apt timeout related crash from cloudinit in kernel or software stages - try to retry, this is issue in cloudinit modules hardcodes
 
 #### Desktop setup:
 
