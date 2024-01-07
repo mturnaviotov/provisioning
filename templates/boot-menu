@@ -1,7 +1,27 @@
-DEFAULT Install Ubuntu
-TIMEOUT 30
-LABEL Install Ubuntu
-KERNEL {{ destination_folder }}/vmlinuz
-INITRD {{ destination_folder }}/initrd
+# Default Should contain menu item label or driver name:
+# DEFAULT Ubuntu       - Means choose item without interaction
+# DEFAULT menu.c32     - Old UI
+# DEFAULT vesamenu.c32 - Modern UI
+# DEFAULT vesamenu.c32
+
+# PROMPT 0 means no boot console, just open menu
+# Both timeouts count down in start default menu item
+PROMPT 0
+# Time out second*10 - default menu item choose period
+TIMEOUT 100
+
+MENU TITLE PXE Boot Menu
+ONTIMEOUT Ubuntu
+
+LABEL Ubuntu
+MENU LABEL ^Install Ubuntu
+KERNEL cloud-init/vmlinuz
+INITRD cloud-init/initrd
 IPAPPEND 1
-APPEND root=/dev/ram0 ramdisk_size=1500000 ip=dhcp only-ubiquity cloud-config-url=/dev/null boot=casper url=http://{{ target_iface.ip }}/{{ distro_name }} ds=nocloud-net;s=http://{{ target_iface.ip }}/{{ destination_folder }} autoinstall ---
+APPEND root=/dev/ram0 ramdisk_size=1500000 ip=dhcp only-ubiquity cloud-config-url=/dev/null boot=casper url=http://192.168.3.1/ubuntu-22.04.3-live-server-amd64.iso ds=nocloud-net;s=http://192.168.3.1/cloud-init autoinstall ---
+
+LABEL LOCALBOOT
+MENU LABEL ^Boot from first hard disk
+LOCALBOOT 0
+KERNEL chain.c32
+APPEND hd0 0

@@ -283,9 +283,12 @@ autoinstall:
         Get {
           Assume-Yes "true";
           Fix-Broken "true";
-          Acquire-Retries "20";
+          Acquire-Retries "120";
+          Acquire::Retries "120";
           Acquire-Http-Timeout "100";
-        };
+          Acquire::http::Timeout "100";
+          Acquire::ftp::Timeout "100";
+        };cat 
       };
       # Acquire::Retries "120";
       # DPkg::Lock::Timeout "120";
@@ -334,6 +337,7 @@ autoinstall:
     #   echo *************************
     #   EOF
   # =============================================================================
+  # User levek data set up
   user-data:
   #set it with disabling identity to run end-user desktop setting on at the first boot.
   # GUI should be enabled
@@ -361,6 +365,9 @@ autoinstall:
   # =============================================================================
   # bootcmd:
   #   - echo 'BOOOTCMD' > /srv/bootcmd
+  # =============================================================================
+  # Final message
+  final_message: "The system is finally up, afrer $UPTIME seconds"
 # =============================================================================
 # memo:
 #   https://ubuntu.com/server/docs/install/autoinstall-reference

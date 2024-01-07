@@ -44,8 +44,8 @@
         - pxelinux
         - vim
         - lsof
-    #     # - samba
-    #     # - rsync
+        # - samba
+        # - rsync
     - name: Create directory for netplan
       become: yes
       ansible.builtin.file:
@@ -78,10 +78,15 @@
         dest: /srv/tftp/{{ item }}
         state: link
       with_items:
+        # System
         - ldlinux.c32
-        #  - libcom32.c32
-        #  - libutil.c32
-        #  - vesamenu.c32
+        # PXE boot menu old UI driver
+        - menu.c32
+        # Pre-requisite for VESA
+        - libcom32.c32
+        - libutil.c32
+        # PXE boot menu Vesa UI driver
+        - vesamenu.c32
     - name: Download Ubuntu
       become: yes
       get_url:

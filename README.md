@@ -20,29 +20,32 @@ Server uses a small number of services:
 - 1 CPU
 - 1 GB ram
 - 5 Gb for a system
-- Additional space for Linux, windows, and other boot images
+- Additional space for Linux, Windows, and other boot images
 
 #### PXE Server setting
 
-- Settings located on the top of linux-pxe-install.yml - You should provide the master interface ('external') name and target interface settings which will be configured for serve requests from PXE clients.
-- Network settings are covered in templates/netplan.yaml
-- CloudInit template stored in templates/cloud-init.yaml
-
+- Update inventory file to provide valid server ip for Ansible
+- Settings located on the top of linux-pxe-install.yml
+- You should provide the master interface ('external') name and 'target' interface settings which will be configured for serve requests from PXE clients in templates/netplan.yaml
+- Boot menu contains examples to use old ncurses style menu and vesa UI in templates/boot-menu
+- Boot menu contains option for booting from hard disk (not default)
+- CloudInit template for PXE clients stored in templates/cloud-init.yaml, check it before apply Ansible playbook
+- Apply ansible playbook to your server
 
 ### Ubuntu PXE Client
 
-- Connect to to isolated network hub or switch which is connecter to second network adapter which will be serve PXE related requests.
+- Connect it to isolated network hub or switch which is connecter to second Server network adapter (marked as target) which will be serve PXE related requests.
 - Set up boot from LAN in BIOS settings for hardware or virtual machine unit.
-- check templates/cloud-init.yaml and update for your needs.
+- Check templates/cloud-init.yaml and update for your needs.
 
-* Desktop setup:
+#### Desktop setup:
 
 - Enable desktop-related packages like ubuntu-desktop.
 - Provide default username in identity section to prepare it with one default user and SSH keys 
 - Disable identity block and enable the 'users: ['']' section to allow interactive user setup - login and full name and password in the first boot action.
 - See disk layout setup section later
 
-* Server setup
+#### Server setup
 
 - Enable identity block to provide hostname (not DNS), user name, and password for access the server instance 
 - Add SSH keys to the SSH section
